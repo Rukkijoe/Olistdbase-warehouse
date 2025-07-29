@@ -1,0 +1,326 @@
+/*===============================================================================
+Stored Procedure: Load Silver Layer (Source -> Silver)
+===============================================================================
+Script Purpose:
+    This stored procedure inserts data into the 'Silver' schema from the Bronze Schema. 
+    It performs the following actions:
+    - Truncates the Silver tables before inserting the data.
+    - Uses the `INSERT INTO` command to insert data from the Bronze schema to the Silver tables.
+
+Parameters:
+    None. 
+	  This stored procedure does not accept any parameters or return any values.
+
+Usage Example:
+    EXEC Silver.load_Silver_tables;
+===============================================================================
+   */
+
+CREATE OR ALTER PROCEDURE silver.load_silver_tables AS
+Begin
+	DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME; 
+	BEGIN TRY
+		--- Code that might cause an error
+		SET		@batch_start_time = GETDATE();
+		PRINT	'================================================';
+		PRINT	'Loading Silver Layer';
+		PRINT	'================================================';
+
+		SET			@start_time = GETDATE();
+		PRINT		'>> Truncating Table: silver.customers_dataset';
+		TRUNCATE TABLE silver.customers_dataset;
+		PRINT		'>> Inserting Data Into: silver.customers_dataset';
+		--- Loading Silver.customers_dataset
+		Insert Into Silver.customers_dataset (
+					customer_id,
+					customer_unique_id,
+					customer_zip_code_prefix,
+					customer_city,
+					customer_state
+					)
+
+		Select		customer_id,
+					Customer_unique_id,
+					Customer_zip_code_prefix,
+					Customer_city,
+					Case
+					When Upper(Trim(customer_state)) = 'AC' Then 'Acre'
+					When Upper(Trim(customer_state)) = 'AL' Then 'Alagoas'
+					When Upper(Trim(customer_state)) = 'AM' Then 'Amazonas'
+					When Upper(Trim(customer_state)) = 'AP' Then 'Amapá'
+					When Upper(Trim(customer_state)) = 'BA' Then 'Bahia'
+					When Upper(Trim(customer_state)) = 'CE' Then 'Ceará'
+					When Upper(Trim(customer_state)) = 'DF' Then 'Federal District'
+					When Upper(Trim(customer_state)) = 'ES' Then 'Espírito Santo'
+					When Upper(Trim(customer_state)) = 'GO' Then 'Goiás'
+					When Upper(Trim(customer_state)) = 'MA' Then 'Maranhão'
+					When Upper(Trim(customer_state)) = 'MG' Then 'Minas Gerais'
+					When Upper(Trim(customer_state)) = 'MS' Then 'Mato Grosso do Sul'
+					When Upper(Trim(customer_state)) = 'MT' Then 'Mato Grosso'
+					When Upper(Trim(customer_state)) = 'PA' Then 'Pará'
+					When Upper(Trim(customer_state)) = 'PB' Then 'Paraíba'
+					When Upper(Trim(customer_state)) = 'PE' Then 'Pernambuco'
+					When Upper(Trim(customer_state)) = 'PI' Then 'Piauí'
+					When Upper(Trim(customer_state)) = 'PR' Then 'Paraná'
+					When Upper(Trim(customer_state)) = 'RJ' Then 'Rio de Janeiro'
+					When Upper(Trim(customer_state)) = 'RN' Then 'Rio Grande do Norte'
+					When Upper(Trim(customer_state)) = 'RO' Then 'Rondônia'
+					When Upper(Trim(customer_state)) = 'RR' Then 'Roraima'
+					When Upper(Trim(customer_state)) = 'RS' Then 'Rio Grande do Sul'
+					When Upper(Trim(customer_state)) = 'SC' Then 'Santa Catarina'
+					When Upper(Trim(customer_state)) = 'SE' Then 'Sergipe'
+					When Upper(Trim(customer_state)) = 'SP' Then 'São Paulo'
+					When Upper(Trim(customer_state)) = 'TO' Then 'Tocantins'
+					Else 'N/A'
+					End As customer_state --- Normalize customer state in readable form
+		From		Bronze.customers_dataset;
+		SET			@end_time = GETDATE();
+		PRINT		'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT		'>> ----------------------------';
+
+		SET			@start_time = GETDATE();
+		PRINT		'>> Truncating Table: silver.geolocation_dataset';
+		TRUNCATE TABLE silver.customers_dataset;
+		PRINT		'>> Inserting Data Into: silver.geolocation_dataset';
+		--- Loading Silver.geolocation_dataset
+		Insert Into Silver.Geolocation_dataset
+					( Geolocation_zip_code_prefix,
+						Geolocation_lat,
+						Geolocation_lng,
+						Geolocation_City,
+						Geolocation_state
+						)
+
+				Select	Geolocation_zip_code_prefix,
+						Geolocation_lat,
+						Geolocation_lng,
+						Geolocation_city,
+						Case 
+						When Trim(geolocation_state_) = 'rio de janeiro, brasil,RJ'  Then 'Rio de Janeiro' 
+						When Trim(geolocation_state_) = 'bahia, brasil,BA' Then 'Bahia'
+						When Upper(Trim(geolocation_state_)) = 'AC' Then 'Acre'
+						When Upper(Trim(geolocation_state_)) = 'AL' Then 'Alagoas'
+						When Upper(Trim(geolocation_state_)) = 'AM' Then 'Amazonas'
+						When Upper(Trim(geolocation_state_)) = 'AP' Then 'Amapá'
+						When Upper(Trim(geolocation_state_)) = 'BA' Then 'Bahia'
+						When Upper(Trim(geolocation_state_)) = 'CE' Then 'Ceará'
+						When Upper(Trim(geolocation_state_)) = 'DF' Then 'Federal District'
+						When Upper(Trim(geolocation_state_)) = 'ES' Then 'Espírito Santo'
+						When Upper(Trim(geolocation_state_)) = 'GO' Then 'Goiás'
+						When Upper(Trim(geolocation_state_)) = 'MA' Then 'Maranhão'
+						When Upper(Trim(geolocation_state_)) = 'MG' Then 'Minas Gerais'
+						When Upper(Trim(geolocation_state_)) = 'MS' Then 'Mato Grosso do Sul'
+						When Upper(Trim(geolocation_state_)) = 'MT' Then 'Mato Grosso'
+						When Upper(Trim(geolocation_state_)) = 'PA' Then 'Pará'
+						When Upper(Trim(geolocation_state_)) = 'PB' Then 'Paraíba'
+						When Upper(Trim(geolocation_state_)) = 'PE' Then 'Pernambuco'
+						When Upper(Trim(geolocation_state_)) = 'PI' Then 'Piauí'
+						When Upper(Trim(geolocation_state_)) = 'PR' Then 'Paraná'
+						When Upper(Trim(geolocation_state_)) = 'RJ' Then 'Rio de Janeiro'
+						When Upper(Trim(geolocation_state_)) = 'RN' Then 'Rio Grande do Norte'
+						When Upper(Trim(geolocation_state_)) = 'RO' Then 'Rondônia'
+						When Upper(Trim(geolocation_state_)) = 'RR' Then 'Roraima'
+						When Upper(Trim(geolocation_state_)) = 'RS' Then 'Rio Grande do Sul'
+						When Upper(Trim(geolocation_state_)) = 'SC' Then 'Santa Catarina'
+						When Upper(Trim(geolocation_state_)) = 'SE' Then 'Sergipe'
+						When Upper(Trim(geolocation_state_)) = 'SP' Then 'São Paulo'
+						When Upper(Trim(geolocation_state_)) = 'TO' Then 'Tocantins'
+						Else 'N/A'
+						End As customer_state --- Normalize customer state in readable form
+		From			Bronze.geolocation_dataset;
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+
+		SET				@start_time = GETDATE();
+		PRINT			'>> Truncating Table: silver.order_datasets';
+		TRUNCATE TABLE silver.order_datasets;
+		PRINT			'>> Inserting Data Into: silver.order_datasets';
+		--- Loading Silver.order_datasets
+		Insert Into		Silver.order_datasets
+					(	Order_id,
+						Customer_id,
+						Order_status,
+						Order_purchase_timestamp,
+						Order_approved_at,
+						Order_delivered_carrier_date,
+						Order_delivered_customer_date,
+						Order_estimated_delivery_date
+						)
+		Select			Order_id,
+						Customer_id,
+						Order_status,
+						Cast(Order_purchase_timestamp As Date) As Order_purchase_date,
+						Cast(order_approved_at As Date) As Order_approved_date,
+						Cast(Order_delivered_carrier_date As Date) As order_delivered_carrier_date,
+						Cast(Order_delivered_customer_date As Date) As order_delivered_customer_date,
+						Cast(order_estimated_delivery_date As Date) As Order_estimated_delivery_date
+		From			Bronze.order_datasets;
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+
+
+		SET				@start_time = GETDATE();
+		PRINT			'>> Truncating Table: silver.order_items_dataset';
+		TRUNCATE TABLE silver.order_Items_dataset;
+		PRINT			'>> Inserting Data Into: silver.order_Items_dataset';
+		--- Loading Silver.order_items_dataset	
+		Insert Into		Silver.order_items_dataset
+					(	Order_id,
+						Order_item_id,
+						Product_id,
+						Seller_id,
+						Shipping_limit_date,
+						Price,
+						Freight_value
+						)
+		Select			order_id,
+						order_item_id,
+						product_id,
+						Seller_id,
+						Cast(shipping_limit_date As Date)  As Shipping_limit_date,
+						Price,
+						Freight_value
+		From			Bronze.order_items_dataset;
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+
+		SET				@start_time = GETDATE();
+		PRINT			'>> Truncating Table: silver.order_Payments_datasets';
+		TRUNCATE TABLE silver.order_payments_datasets;
+		PRINT			'>> Inserting Data Into: silver.order_payments_datasets';
+
+		--- Loading Silver.order_payments_datasets
+		Insert Into		silver.order_payments_datasets
+					(	Order_id,
+						Payment_sequential,
+						Payment_type,
+						Payment_instalments,
+						Payment_value
+						)
+		Select			order_id,
+						Payment_sequential,
+						payment_type,
+						Payment_instalments,
+						payment_value
+		From			bronze.order_payments_datasets
+		where			Payment_value <> 0;
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+
+		SET				@start_time = GETDATE();
+		PRINT			'>> Truncating Table: silver.order_reviews_dataset';
+		TRUNCATE TABLE silver.order_reviews_dataset;
+		PRINT			'>> Inserting Data Into: silver.order_reviews_dataset';
+		--- Loading Silver.order_reviews_dataset
+		Insert Into		Silver.Order_reviews_dataset
+		(				Review_id,
+						Order_id,
+						Review_score
+		)
+		Select			Review_id,
+						Order_id,
+						Review_score
+		From			Bronze.order_reviews_dataset;
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+
+		SET				@start_time = GETDATE();
+		PRINT			'>> Truncating Table: silver.Product_dataset';
+		TRUNCATE TABLE silver.Product_dataset;
+		PRINT			'>> Inserting Data Into: silver.Product_dataset';
+		--- Loading Silver.Product_dataset
+		Insert Into		Silver.product_dataset
+		(				Product_id,
+						Product_category_name,
+						Product_name_length,
+						Product_description_length,
+						Product_photo_qty,
+						Product_weight_g,
+						Product_length_cm,
+						Product_height_cm,
+						Product_widtd_cm
+						)
+		Select			Product_id,
+						Product_category_name,
+						Product_name_length,
+						Product_description_length,
+						Product_photo_qty,
+						Product_weight_g,
+						Product_length_cm,
+						Product_height_cm,
+						Product_widtd_cm
+		From			bronze.product_dataset
+		Where			Product_category_name <> '#value!';
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+
+		SET				@start_time = GETDATE();
+		PRINT			'>> Truncating Table: silver.Sellers_dataset';
+		TRUNCATE TABLE silver.Sellers_dataset;
+		PRINT			'>> Inserting Data Into: silver.Sellers_dataset';
+		--- Loading Silver.Sellers_dataset
+		Insert Into		Silver.Sellers_dataset
+		(				Seller_id,
+						Seller_zipcode_prefix,
+						Seller_city,
+						Seller_state)
+
+		Select			Seller_id,
+						Seller_zipcode_prefix,
+						Seller_city,
+						Case
+						When Upper(Trim(Seller_state)) = 'AC' Then 'Acre'
+						When Upper(Trim(Seller_state)) = 'AL' Then 'Alagoas'
+						When Upper(Trim(Seller_state)) = 'AM' Then 'Amazonas'
+						When Upper(Trim(Seller_state)) = 'AP' Then 'Amapá'
+						When Upper(Trim(Seller_state)) = 'BA' Then 'Bahia'
+						When Upper(Trim(Seller_state)) = 'CE' Then 'Ceará'
+						When Upper(Trim(Seller_state)) = 'DF' Then 'Federal District'
+						When Upper(Trim(Seller_state)) = 'ES' Then 'Espírito Santo'
+						When Upper(Trim(Seller_state)) = 'GO' Then 'Goiás'
+						When Upper(Trim(Seller_state)) = 'MA' Then 'Maranhão'
+						When Upper(Trim(Seller_state)) = 'MG' Then 'Minas Gerais'
+						When Upper(Trim(Seller_state)) = 'MS' Then 'Mato Grosso do Sul'
+						When Upper(Trim(Seller_state)) = 'MT' Then 'Mato Grosso'
+						When Upper(Trim(Seller_state)) = 'PA' Then 'Pará'
+						When Upper(Trim(Seller_state)) = 'PB' Then 'Paraíba'
+						When Upper(Trim(Seller_state)) = 'PE' Then 'Pernambuco'
+						When Upper(Trim(Seller_state)) = 'PI' Then 'Piauí'
+						When Upper(Trim(Seller_state)) = 'PR' Then 'Paraná'
+						When Upper(Trim(Seller_state)) = 'RJ' Then 'Rio de Janeiro'
+						When Upper(Trim(Seller_state)) = 'RN' Then 'Rio Grande do Norte'
+						When Upper(Trim(Seller_state)) = 'RO' Then 'Rondônia'
+						When Upper(Trim(Seller_state)) = 'RR' Then 'Roraima'
+						When Upper(Trim(Seller_state)) = 'RS' Then 'Rio Grande do Sul'
+						When Upper(Trim(Seller_state)) = 'SC' Then 'Santa Catarina'
+						When Upper(Trim(Seller_state)) = 'SE' Then 'Sergipe'
+						When Upper(Trim(Seller_state)) = 'SP' Then 'São Paulo'
+						When Upper(Trim(Seller_state)) = 'TO' Then 'Tocantins'
+						Else 'N/A'
+						End As Seller_state --- Normalize customer state in readable form
+		From			Bronze.sellers_dataset;
+		SET				@end_time = GETDATE();
+		PRINT			'>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'>> ----------------------------';
+		SET				@batch_end_time = GETDATE();
+		PRINT			'=========================================='
+		PRINT			'Loading Silver Layer is Completed';
+		PRINT			'   - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
+		PRINT			'=========================================='
+	END TRY
+	BEGIN CATCH
+	--- Code that runs if an error occurs in the TRY block
+		PRINT '=========================================='
+		PRINT 'ERROR OCCURED DURING LOADING SILVER LAYER'
+		PRINT 'Error Message' + ERROR_MESSAGE();
+		PRINT 'Error Message' + CAST (ERROR_NUMBER() AS NVARCHAR);
+		PRINT 'Error Message' + CAST (ERROR_STATE() AS NVARCHAR);
+		PRINT '=========================================='
+	END CATCH
+End
