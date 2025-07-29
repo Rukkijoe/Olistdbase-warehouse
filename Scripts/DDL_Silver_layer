@@ -1,0 +1,187 @@
+/*
+==============================================================================
++++++++++++++++++++++++++++++++++++++++++++++
+   Create Tables for the Silver Layer Schema
++++++++++++++++++++++++++++++++++++++++++++++
+   Script Purpose:
+
+	This script creates tables in the 'Silver' schema, dropping existing tables 
+    if they already exist.
+	Run this script to re-define the DDL structure of 'Silver' Tables
+=============================================================================
+*/
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.sellers_dataset;
+
+Go
+
+
+--- Create the Sellers Info Table
+
+
+Create Table	Silver.sellers_dataset 
+(				Seller_id Varchar(50),
+				Seller_zipcode_prefix Varchar(10),
+				Seller_city Varchar(50),
+				Seller_state Varchar(20)
+);
+
+Go
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.product_dataset;
+
+Go
+
+
+--- Create the Product Info Table
+
+
+Create Table	Silver.product_dataset
+(
+				Product_id Varchar(50),
+				Product_category_name Varchar(50),
+				Product_name_length Int,
+				Product_description_length Int,
+				Product_photo_qty Int,
+				Product_weight_g Int,
+				Product_Length_cm Int,
+				Product_height_cm Int,
+				Product_widtd_cm Int
+);
+
+Go
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.customers_dataset;
+
+Go
+
+--- Create the Customer Info Table
+
+
+CREATE TABLE silver.customers_dataset (
+    customer_id VARCHAR(50),
+    customer_unique_id VARCHAR(50),
+    customer_zip_code_prefix VARCHAR(10),
+    customer_city VARCHAR(50),
+    customer_state CHAR(20)
+);
+
+Go
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.geolocation_dataset;
+
+Go
+
+--- Create the Geolocation Info Table
+
+
+Create Table	Silver.geolocation_dataset
+(
+				Geolocation_zip_code_prefix Varchar(10),
+				Geolocation_lat Varchar(50),
+				Geolocation_lng Varchar(50),
+				Geolocation_City Varchar(50),
+				Geolocation_state Varchar(50)
+);
+
+
+Go
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.order_datasets;
+
+Go
+
+--- Create the Orders Info Table
+
+Create Table	Silver.order_datasets
+(
+				Order_id Varchar(50),
+				Customer_id Varchar(50),
+				Order_status Varchar(50),
+				Order_purchase_timestamp Datetime,
+				Order_approved_at Datetime,
+				Order_delivered_carrier_date Datetime,
+				Order_delivered_customer_date Datetime,
+				Order_estimated_delivery_date Datetime
+);
+
+Go
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.order_items_dataset;
+
+Go
+
+--- Create the Order Items Info Table
+
+Create Table	Silver.order_items_dataset
+( 
+				Order_id Varchar(50),
+				Order_item_id Int,
+				Product_id Varchar(50),
+				Seller_id Varchar(50),
+				Shipping_limit_date Datetime,
+				Price DECIMAL(10,2),
+				Freight_value DECIMAL(10,2)
+
+
+);
+
+
+Go
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.order_payments_datasets;
+
+Go
+
+--- Create the Order Payments Info Table
+
+
+Create Table	Silver.order_payments_datasets
+(
+				Order_id Varchar(50),
+				Payment_sequential Int,
+				Payment_type Varchar(20),
+				Payment_instalments Int,
+				Payment_value DECIMAL(10,2)
+);
+
+Go
+
+--- Safe drop if table exist
+
+DROP TABLE IF EXISTS Silver.order_reviews_dataset;
+
+Go
+
+
+--- Create the Order Reviews Info Table
+
+
+Create Table		Silver.order_reviews_dataset
+(
+					Review_id Varchar(60),
+					Order_id Varchar(50),
+					Review_score Int
+					
+);
+
+Go
+
+
+
+
+
+
