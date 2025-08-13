@@ -1,0 +1,52 @@
+/*
+===============================================================================
+Change Over Time Analysis
+===============================================================================
+Purpose:
+    - To track trends, growth, and changes in key metrics over time.
+    - For time-series analysis and identifying seasonality.
+    - To measure growth or decline over specific periods.
+
+SQL Functions Used:
+    - Date Functions: DATEPART(), DATETRUNC(), FORMAT()
+    - Aggregate Functions: SUM(), COUNT(), AVG()
+===============================================================================
+*/
+
+-- Analyse sales performance over time
+	-- Quick Date Functions
+
+Select	Year(order_date) As order_year,
+		Month(order_date) As Order_month,
+		Sum(price) As Total_revenue,
+		Count(Distinct Order_id) As Total_orders,
+		Count( Distinct customer_key) As Total_customers,
+		Count ( Distinct Seller_key) As Total_sellers
+From	Gold.fact_order_dataset
+Group By Year(order_date),  Month(order_date)
+Order By Year(order_date), Month(order_date);
+
+
+
+--- Datetrunc
+
+Select	Datetrunc(Month,order_date) As Order_Date,
+		Sum(price) As Total_revenue,
+		Count(Distinct Order_id) As Total_orders,
+		Count( Distinct customer_key) As Total_customers,
+		Count ( Distinct Seller_key) As Total_sellers
+From	Gold.fact_order_dataset
+Group By Datetrunc(Month,order_date)
+Order By Datetrunc(Month,order_date);
+
+--- Format
+
+Select	Format(order_date, 'yyyy-MMM') As Order_Date,
+		Sum(price) As Total_revenue,
+		Count(Distinct Order_id) As Total_orders,
+		Count( Distinct customer_key) As Total_customers,
+		Count ( Distinct Seller_key) As Total_sellers
+From	Gold.fact_order_dataset
+Group By Format(order_date, 'yyyy-MMM')
+Order By Format(order_date, 'yyyy-MMM');
+
