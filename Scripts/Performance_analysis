@@ -1,0 +1,49 @@
+/*
+===============================================================================
+Performance Analysis (Year-over-Year, Month-over-Month)
+===============================================================================
+Purpose:
+    - To measure the performance of product categories, customers, or regions over time.
+    - For benchmarking and identifying high-performing entities.
+    - To track yearly trends and growth.
+
+SQL Functions Used:
+    - LAG(): Accesses data from previous rows.
+    - AVG() OVER(): Computes average values within partitions.
+    - CASE: Defines conditional logic for trend analysis.
+===============================================================================
+*/
+
+/* Analyze the yearly performance of product categories  by comparing their sales 
+to both the average sales performance of the product and the previous year's sales
+*/
+
+
+
+Select		order_year,
+			product_category_name,
+			total_sales,
+			Avg(total_sales) Over (Partition By product_category_name ) As Avg_sales,
+			total_sales - Avg(total_sales) Over (Partition By product_category_name) As diff_avg,
+			Case 
+				When total_sales - Avg(total_sales) Over (Partition By product_category_name) > 0 Then 'Above Average'
+				When total_sales - Avg(total_sales) Over (Partition By product_category_name) < 0 Then 'Below average'
+				Else 'Average'
+			End As Performance,
+			Lag(total_sales)  Over (Partition By product_category_name Order By order_year  ) As Prev_year_sales,
+			total_sales - Lag(total_sales)  Over (Partition By product_category_name Order By order_year  ) As Prev_year_Sales_diff,
+			Case
+				When total_sales - Lag(total_sales)  Over (Partition By product_category_name Order By order_year  ) > 0 Then 'Increase'
+				When total_sales - Lag(total_sales)  Over (Partition By product_category_name Order By order_year  ) < 0 Then 'Decrease'
+				Else 'No Change'
+			End As Change_in_sales
+From
+(
+Select		Year(order_date) As order_year,
+			product_category_name,
+			sum(price) As total_sales
+From		Gold.fact_order_dataset
+Group By	Year(order_date) , product_category_name) t;
+
+
+
