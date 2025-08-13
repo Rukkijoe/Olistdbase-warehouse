@@ -1,0 +1,36 @@
+/*
+===============================================================================
+Data Segmentation Analysis
+===============================================================================
+Purpose:
+    - To group data into meaningful categories for targeted insights.
+    - For customer segmentation, product categorization, or regional analysis.
+
+SQL Functions Used:
+    - CASE: Defines custom segmentation logic.
+    - GROUP BY: Groups data into segments.
+===============================================================================
+*/
+
+/*Segment products into cost ranges and 
+count how many products fall into each segment*/
+
+
+Select	Count(product_key) As Total_products,
+		Segmentation_by_price
+From 
+(
+Select		Distinct product_key,
+			Case 
+					when  price = 0 or price < 5 Then 'low priced goods'
+					when  price = 5 or price < 100 Then 'low_medium priced goods'
+					when  price = 100 or price < 200 Then 'medium priced goods'
+					when  price = 200 or price < 300 Then 'high_medium priced goods'
+					Else 'high priced goods'
+			End as Segmentation_by_price
+From Gold.fact_order_dataset 
+) t
+Group By Segmentation_by_price
+Order By Count(product_key) Desc;
+
+
