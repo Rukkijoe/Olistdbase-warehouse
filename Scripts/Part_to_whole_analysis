@@ -1,0 +1,30 @@
+/*
+===============================================================================
+Part-to-Whole Analysis
+===============================================================================
+Purpose:
+    - To compare performance or metrics across dimensions or time periods.
+    - To evaluate differences between categories.
+    - Useful for A/B testing or regional comparisons.
+
+SQL Functions Used:
+    - SUM(), AVG(): Aggregates values for comparison.
+    - Window Functions: SUM() OVER() for total calculations.
+===============================================================================
+*/
+-- Which categories contribute the most to overall sales?
+
+
+Select Product_category_name,
+Total_sales,
+Sum(total_sales) Over () As Overall_sales,
+Cast(Cast((Total_sales /Sum(total_sales) Over ())* 100 As Decimal(10,2)) As Varchar) + '%' As Percentage_total
+From
+(
+Select 			product_category_name,
+				Sum(price) As Total_sales
+From			Gold.fact_order_dataset
+Group By		Product_category_name
+)t
+Group By Product_category_name, total_sales
+Order By Cast((Total_sales /Sum(total_sales) Over ())* 100 As Decimal(10,2)) Desc
