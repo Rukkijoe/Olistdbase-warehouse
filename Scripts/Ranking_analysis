@@ -1,0 +1,79 @@
+/*
+===============================================================================
+Ranking Analysis
+===============================================================================
+Purpose:
+    - To rank items (e.g., products, customers) based on performance or other metrics.
+    - To identify top performers or laggards.
+
+SQL Functions Used:
+    - Window Ranking Functions: RANK(), DENSE_RANK(), ROW_NUMBER(), TOP
+    - Clauses: GROUP BY, ORDER BY
+===============================================================================
+*/
+
+-- Which 5 category Generating the Highest Revenue?
+
+-- Simple Ranking
+
+
+Select		Top 5
+			product_category_name,
+			Sum(price) As Total_revenue
+From		gold.fact_order_dataset
+Group by	product_category_name
+Order By	Total_revenue Desc;
+
+
+-- Complex but Flexibly Ranking Using Window Functions 
+--- Method 1
+
+Select	Top 5
+		product_category_name,
+		Sum(price) As Total_revenue,
+		Rank() Over (Order By Sum(price) Desc) As Top_ranking_category
+From	Gold.fact_order_dataset
+Group By product_category_name;
+
+--- Or Method 2
+
+Select	* 
+From
+(Select 
+		product_category_name,
+		Sum(price) As Total_revenue,
+		Rank() Over (Order By Sum(price) Desc) As Top_ranking_category
+From	Gold.fact_order_dataset
+Group By product_category_name) t
+Where	Top_ranking_category <= 5;
+
+-- What are the 5 worst-performing categories in terms of sales? 
+--- Method 1
+
+Select		Top 5
+			product_category_name,
+			Sum(price) As Total_revenue
+From		gold.fact_order_dataset
+Group by	product_category_name
+Order By	Total_revenue ;
+
+--- Method 2
+
+Select		Top 5
+			product_category_name,
+			Sum(price) As Total_revenue,
+			Rank() Over (Order By Sum(price) ) As Top_ranking_category
+From		Gold.fact_order_dataset
+Group By	product_category_name;
+
+--- Or Method 3
+
+Select		* 
+From
+(Select 
+			product_category_name,
+			Sum(price) As Total_revenue,
+			Rank() Over (Order By Sum(price) Asc) As Top_ranking_category
+From		Gold.fact_order_dataset
+Group By	product_category_name) t
+Where		Top_ranking_category <= 5;
