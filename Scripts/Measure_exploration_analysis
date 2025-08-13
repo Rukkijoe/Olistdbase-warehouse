@@ -1,1 +1,105 @@
+/*
+===============================================================================
+Measures Exploration (Key Metrics)
+===============================================================================
+Purpose:
+    - To calculate aggregated metrics (e.g., totals, averages) for quick insights.
+    - To identify overall trends or spot anomalies.
+
+SQL Functions Used:
+    - COUNT(), SUM(), AVG()
+===============================================================================
+*/
+
+_-- Find the Total Sales
+
+Select Sum(price) As Total_sales
+From Gold.fact_order_dataset;
+
+--- Total Goods sold
+
+Select count(order_key) As Total_items_sold
+From gold.fact_order_dataset;
+
+--- Avearge selling price
+
+Select Cast(Round(Avg(coalesce(price,0)),2) As Decimal(5,2)) As average_price_goods
+From gold.fact_order_dataset;
+
+Select avg(price) As Avearage_price_goods
+from gold.fact_order_dataset;
+
+-- Find the Total number of Orders
+
+Select Count(Distinct(order_id)) As Total_orders
+From Gold.fact_order_dataset
+
+-- Find the total number of product categories
+
+Select Count(distinct product_category_name) As Number_categories
+From gold.fact_order_dataset;
+
+Select Count(distinct product_category_name) As Number_categories
+From gold.dim_product_dataset;
+
+
+-- Find the total number of customers
+
+Select Count(customer_key) As total_customers
+From gold.dim_customers_dataset
+
+
+-- Find the total number of customers that has placed an order
+
+Select Count(distinct(customer_key)) As Customers_with_orders
+From gold.fact_order_dataset
+
+-- Find the total number of Sellers
+
+Select Count(seller_key) As total_sellers
+From Gold.dim_sellers_dataset
+
+-- Find the total number of sellers that has sold an item
+
+Select Count( Distinct seller_key) As Sellers_with_items_sold
+From gold.fact_order_dataset
+
+-- Find the total number of states that the customers are located
+
+Select Count( Distinct customer_State)   As Number_of_customer_states
+From Gold.dim_customers_dataset
+
+-- Find the total number of states that the sellers are located
+
+Select Count( Distinct seller_State)   As Number_of_sellers_states
+From Gold.dim_sellers_dataset
+
+---Generate a Report that shows all key metrics of the business
+
+Select 'Total Sales ' As Measure_name , Sum(Price) As Measure_value From gold.fact_order_dataset
+Union All 
+Select 'Total items sold ' , Count(order_key)   From gold.fact_order_dataset
+Union All 
+Select 'Average price goods', Cast(Round(Avg(coalesce(price,0)),2) As Decimal(5,2)) From gold.fact_order_dataset
+Union All
+Select 'Total orders', Count(Distinct(order_id))  From gold.fact_order_dataset
+Union All
+Select 'Number Of categories', Count(distinct product_category_name) From gold.fact_order_dataset
+Union All
+Select 'Total customers', Count(customer_key)  From gold.dim_customers_dataset
+Union All
+Select 'Customers with orders' , Count(distinct(customer_key)) From gold.fact_order_dataset
+Union All
+Select 'Total sellers' , Count(seller_key) From Gold.dim_sellers_dataset 
+Union All
+Select 'Sellers with items sold' ,Count( Distinct seller_key) From gold.fact_order_dataset
+Union All
+Select 'Number of States with buyers', Count( Distinct customer_State)   From Gold.dim_customers_dataset
+Union All
+Select 'Numberof states with sellers', Count( Distinct seller_State)   From Gold.dim_sellers_dataset;
+
+
+
+ 
+
 
