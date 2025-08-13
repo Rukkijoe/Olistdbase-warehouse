@@ -107,11 +107,11 @@ Create Table	Silver.order_datasets
 				Order_id Varchar(50),
 				Customer_id Varchar(50),
 				Order_status Varchar(50),
-				Order_purchase_timestamp Datetime,
-				Order_approved_at Datetime,
-				Order_delivered_carrier_date Datetime,
-				Order_delivered_customer_date Datetime,
-				Order_estimated_delivery_date Datetime
+				Order_purchase_timestamp Date,
+				Order_approved_Date Date,
+				Order_delivered_carrier_date Date,
+				Order_delivered_customer_date Date,
+				Order_estimated_delivery_date Date
 );
 
 Go
@@ -130,7 +130,7 @@ Create Table	Silver.order_items_dataset
 				Order_item_id Int,
 				Product_id Varchar(50),
 				Seller_id Varchar(50),
-				Shipping_limit_date Datetime,
+				Shipping_limit_date Date,
 				Price DECIMAL(10,2),
 				Freight_value DECIMAL(10,2)
 
