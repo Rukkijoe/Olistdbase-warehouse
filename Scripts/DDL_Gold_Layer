@@ -1,1 +1,192 @@
+/*
+===============================================================================
+DDL Script: Create Gold Views
+===============================================================================
+Script Purpose:
+    This script creates views for the Gold layer in the Olist data warehouse. 
+    The Gold layer represents the final dimension and fact tables (Star Schema)
+
+    Each view performs transformations and combines data from the Silver layer 
+    to produce a clean, enriched, and business-ready dataset.
+
+Usage:
+    - These views can be queried directly for analytics and reporting.
+===============================================================================
+*/
+
+
+
+--- Create Dimension: gold.dim_customers_dataset
+
+IF OBJECT_ID('gold.dim_customers_dataset', 'V') IS NOT NULL
+    DROP VIEW gold.dim_customers_dataset;
+
+Go
+
+CREATE VIEW Gold.dim_customers_dataset AS
+SELECT
+	Cast(ROW_NUMBER() OVER (ORDER BY customer_id) As Int) AS customer_key, -- Surrogate key
+    c.customer_id,
+    c.customer_unique_id,
+    c.customer_zip_code_prefix,
+	g.avg_lat As Avearage_Lat,
+    g.avg_lng As Avearage_Lng,
+    c.customer_city,
+    c.customer_state
+    
+FROM silver.customers_dataset AS c
+LEFT JOIN (
+    SELECT 
+        geolocation_zip_code_prefix,
+        AVG(CAST(geolocation_lat AS FLOAT)) AS avg_lat,
+        AVG(CAST(geolocation_lng AS FLOAT)) AS avg_lng
+        
+    FROM silver.geolocation_dataset
+    WHERE 
+        TRY_CAST(geolocation_lat AS FLOAT) IS NOT NULL
+        AND TRY_CAST(geolocation_lng AS FLOAT) IS NOT NULL
+    GROUP BY geolocation_zip_code_prefix
+) AS g
+	ON c.customer_zip_code_prefix = g.geolocation_zip_code_prefix;
+
+Go
+
+--- Create Dimension: gold.dim_sellers_dataset
+
+IF OBJECT_ID('gold.dim_sellers_dataset', 'V') IS NOT NULL
+    DROP VIEW gold.dim_sellers_dataset;
+
+Go
+
+CREATE VIEW Gold.dim_sellers_dataset AS
+SELECT
+	Cast(ROW_NUMBER() OVER (ORDER BY seller_id) As Int) AS seller_key, -- Surrogate key
+    s.seller_id,
+    s.seller_zipcode_prefix,
+	g.avg_lat As Avearage_Lat,
+    g.avg_lng As Avearage_Lng,
+    s.seller_city,
+    s.seller_state
+    
+FROM silver.sellers_dataset AS s
+LEFT JOIN (
+    SELECT 
+        geolocation_zip_code_prefix,
+        AVG(CAST(geolocation_lat AS FLOAT)) AS avg_lat,
+        AVG(CAST(geolocation_lng AS FLOAT)) AS avg_lng
+        
+    FROM silver.geolocation_dataset
+    WHERE 
+        TRY_CAST(geolocation_lat AS FLOAT) IS NOT NULL
+        AND TRY_CAST(geolocation_lng AS FLOAT) IS NOT NULL
+    GROUP BY geolocation_zip_code_prefix
+) AS g
+	ON seller_zipcode_prefix = g.geolocation_zip_code_prefix;
+
+Go
+
+
+
+--- Create Dimension: gold.dim_product_dataset
+
+IF OBJECT_ID('gold.dim_product_dataset', 'V') IS NOT NULL
+    DROP VIEW gold.dim_product_dataset;
+
+Go
+
+CREATE VIEW Gold.dim_product_dataset AS
+SELECT
+		Cast(ROW_NUMBER() OVER (ORDER BY product_id) As Int) AS product_key, -- Surrogate key
+		product_id,
+		product_category_name,
+		product_weight_g
+From	Silver.product_dataset;
+
+Go
+
+--- Create Dimension: gold.dim_order_payments_datasets
+
+
+IF OBJECT_ID('gold.dim_order_payments_datasets', 'V') IS NOT NULL
+    DROP VIEW gold.dim_order_payments_datasets;
+GO
+
+CREATE VIEW gold.dim_order_payments_datasets AS
+WITH payment_sums AS (                --- To merge multiple payments value into one lump sum, so that we have a single value for each order.
+    SELECT 
+        order_id, 
+        SUM(payment_value) AS total_payment
+    FROM silver.order_payments_datasets
+    GROUP BY order_id
+),
+payment_types AS (              --- To aggregate payment methods for order with various payment instruments
+    SELECT 
+        order_id, 
+        STRING_AGG(payment_type, ',') AS payment_methods
+    FROM (
+        SELECT DISTINCT 
+            order_id, 
+            payment_type
+        FROM silver.order_payments_datasets
+    ) t
+    GROUP BY order_id
+)
+SELECT 
+    s.order_id,    --- Each order will have the sum of payments and a merged payment method if more than 1
+    s.total_payment,
+	payment_methods
+    
+FROM payment_sums s
+JOIN payment_types t 
+	ON s.order_id = t.order_id;
+
+
+Go
+
+--- Create Fact: gold.fact_order_dataset
+
+IF OBJECT_ID('gold.fact_order_dataset', 'V') IS NOT NULL
+    DROP VIEW gold.fact_order_dataset;
+
+Go
+
+CREATE VIEW Gold.fact_order_dataset AS
+SELECT
+	Cast(ROW_NUMBER() OVER (ORDER BY a.order_id) As Int)  AS order_key, -- Surrogate key
+	a.order_id,
+	order_item_id,
+	product_key,
+	seller_key,
+	customer_key,
+	product_category_name,
+	price,
+	freight_value,
+	(Price + Freight_value) As Total_value_per_item,
+	total_payment,
+	payment_methods,
+	order_status,
+	order_purchase_timestamp As Order_date,
+	order_delivered_customer_date ,
+	order_estimated_delivery_date,
+	review_score,
+	CASE 
+			WHEN order_status <> 'delivered' AND review_id IS NOT NULL 
+			THEN 'Flagged Review'
+			ELSE 'Normal'
+	END AS review_flag
+From Silver.order_items_dataset As a
+Left Join Silver.order_datasets As b
+	On a.order_id = b.Order_id
+Left Join Gold.dim_customers_dataset As c
+	On b.Customer_id = c.customer_id
+Left Join gold.dim_order_payments_datasets As d
+	On a.Order_id = d.Order_id
+Left Join silver.order_reviews_dataset As e
+	On a.Order_id = e.Order_id
+Left Join gold.dim_product_dataset As f
+	On a.product_id = f.Product_id
+Left Join gold.dim_sellers_dataset As g
+	On a.Seller_id = g.Seller_id;
+
+Go
 
